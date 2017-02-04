@@ -1,0 +1,282 @@
+<html>
+
+<style>
+	@import url(http://fonts.googleapis.com/css?family=Michroma);
+	div.container {
+		width: 100%;
+		background-color: black;
+	}
+	header, footer {
+		background-color: #3c3c3c;
+		height: 100px;
+		align: middle;
+	}
+
+	.button {
+		background-color: #e7e7e7; /* gray */
+		border: none;
+		color: black;
+		padding: 15px 32px;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 200%;
+		margin: 4px 2px;
+		cursor: pointer;
+		border: 2px solid #e7e7e7;
+		width: 80%;
+	}
+	.button:active {
+	  background-color: #555555;
+	}
+	.buttonRed:active {
+	  background-color: #FFFFFF;
+	  border: 2px solid #f44336;
+	}
+	.buttonGreen:active {
+	  background-color: #FFFFFF;
+	  border: 2px solid #4CAF50;
+	}
+
+	.button2 {background-color: #008CBA;} /* Blue */
+	.buttonRed {background-color: #f44336;} /* Red */
+	.buttonGreen {background-color: #4CAF50;} /* GREEN */
+	.buttonWide {background-color: #e7e7e7; color: black;} /* Gray */
+</style>
+<head>
+	<script type="text/javascript">
+	// Script Global Variables
+	var dronelat = -32.912846;
+	var dronelon = 151.705790;
+	var marker = new google.maps.Marker(dronelat,dronelon);
+	</script>
+
+	<script>
+	function myMap() {
+	  var myCenter = new google.maps.LatLng(dronelat,dronelon);
+	  var mapCanvas = document.getElementById("map");
+	  var mapProp = {center: myCenter, zoom: 16};
+	  var map = new google.maps.Map(mapCanvas, mapProp);
+	  marker = new google.maps.Marker({position:myCenter});
+	  marker.setMap(map);
+	  google.maps.event.addDomListener(document.getElementById('maptodrone'), 'click', function ()
+	  {
+		map.setCenter(new google.maps.LatLng(dronelat,dronelon));
+		map.setZoom(16);
+		}
+		);
+		setInterval(function() {
+			var position = new google.maps.LatLng(dronelat,dronelon);
+			marker.setPosition(position);
+		}, 300);
+	}
+	</script>
+
+	<script language="javascript" type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript">
+
+	$(function() {
+		function flightModeReceived(data) {
+			// update the flight mode
+			$('#flightmode').text("Flight Mode: " + String(data.modeoutput));
+			$('#statustext').text("Status: " + String(data.status));
+			$('#uptime').text("System Up-Time: " + String(data.uptime));
+		}
+		function batteryReceived(data) {
+			// update the battery voltage
+			$('#battery').text("Battery: " + String(data.voltage));
+			$('#armedstate').text("Aircraft State: " + String(data.state));
+		}
+		function onPosDataReceived(data) {
+			// update dronelat
+			dronelat = Number(data.lat);
+			// update dronelon
+			dronelon = Number(data.lon);
+			$('#altitude').text("Altitude AGL: " + String(data.altitude.toFixed(2)) + "m");
+			marker.setPosition(new google.maps.Marker(dronelat,dronelon));
+		}
+
+		function fetchData() {
+			$.ajax({
+				url: "flightmode",
+				type: "GET",
+				//data: params,
+				dataType: "json",
+				success: flightModeReceived
+			});
+
+			setTimeout(fetchData, 2000);
+		}
+
+		fetchData();
+
+		function fetchBatteryData() {
+			$.ajax({
+				url: "battery",
+				type: "GET",
+				//data: params,
+				dataType: "json",
+				success: batteryReceived
+			});
+
+			setTimeout(fetchBatteryData, 1000);
+		}
+
+		fetchBatteryData();
+
+		function fetchPosData() {
+			$.ajax({
+				url: "dronepos",
+				type: "GET",
+				//data: params,
+				dataType: "json",
+				success: onPosDataReceived
+			});
+
+			setTimeout(fetchPosData, 1000);
+		}
+
+		fetchPosData();
+
+
+		$('#loiter').click(function(){
+			$.ajax({
+				url: "setflightmode",
+				type: "GET",
+				data: "loiter=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#rth').click(function(){
+			$.ajax({
+				url: "setflightmode",
+				type: "GET",
+				data: "rtl=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#land').click(function(){
+			$.ajax({
+				url: "setflightmode",
+				type: "GET",
+				data: "land=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#stabilise').click(function(){
+			$.ajax({
+				url: "setflightmode",
+				type: "GET",
+				data: "stabilise=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#althold').click(function(){
+			$.ajax({
+				url: "setflightmode",
+				type: "GET",
+				data: "althold=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#poshold').click(function(){
+			$.ajax({
+				url: "setflightmode",
+				type: "GET",
+				data: "poshold=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#autotune').click(function(){
+			$.ajax({
+				url: "setflightmode",
+				type: "GET",
+				data: "autotune=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#maptodrone').click(function(){
+		});
+
+		$('#arm').click(function(){
+			$.ajax({
+				url: "setarmstate",
+				type: "GET",
+				data: "state=1",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+
+		$('#disarm').click(function(){
+			$.ajax({
+				url: "setarmstate",
+				type: "GET",
+				data: "state=0",
+				//dataType: "json",
+				//success: onDataReceived
+			});
+		});
+	});
+
+
+	</script>
+</head>
+<body>
+<div id="statustitle" style="font-weight: bold;font-size: 200%; font-family: 'Michroma'; color:white; background-color: #3c3c3c;">Drone Status</div>
+</br>
+<div id="uptime" style="font-size: 200%; font-family: courier">System Up-Time: waiting...</div>
+</br>
+<div id="battery" style="font-size: 200%; font-family: courier">Battery: waiting...</div>
+</br>
+<div id="flightmode" style="font-size: 200%; font-family: courier">Flight Mode: waiting...</div>
+</br>
+<div id="armedstate" style="font-size: 200%; font-family: courier">Aircraft State: waiting...</div>
+</br>
+<div id="statustext" style="font-size: 200%; font-family: courier">Status: waiting...</div>
+</br>
+<div style="font-weight: bold;font-size: 200%; font-family: 'Michroma'; color:white; background-color: #3c3c3c;">Drone Control</div>
+<div style="text-align:center;">
+	<button class="button" id="stabilise">STABILISE</button></br>
+	<button class="button" id="althold" >ALT HOLD</button></br>
+	<button class="button" id="poshold" >POS HOLD</button></br>
+	<button class="button" id="autotune" >AUTOTUNE</button></br>
+	<button class="button" id="loiter">LOITER</button></br>
+	<button class="button" id="rth" >RTL</button></br>
+	<button class="button" id="land" >LAND</button></br>
+	<button class="button buttonGreen" id="arm" >ARM</button></br>
+	<button class="button buttonRed" id="disarm" >DISARM</button>
+</div>
+
+<div id="maptitle" style="font-weight: bold;font-size: 200%; font-family: 'Michroma'; color:white; background-color: #3c3c3c;">Drone Location</div>
+</br>
+<div id="altitude" style="font-size: 200%; font-family: courier">Altitude AGL: waiting...</div>
+</br>
+<div id="map" style="width:80%;height:500px; margin-left:auto; margin-right:auto;"></div>
+</br>
+<div style="text-align:center;">
+	<button class="button buttonWide" id="maptodrone" >GO TO DRONE</button>
+</div>
+</br>
+<div class="container">
+	<footer>
+		<img src="SAPHI_transparentv2.png" alt="SAPHI Logo" style="width:400px;height:73px;">
+	</footer>
+</div>
+	<script src="https://maps.googleapis.com/maps/api/js?callback=myMap"></script>
+</body>
+</html>
